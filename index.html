@@ -5,54 +5,62 @@
 <meta name="viewport" content="width=device-width,initial-scale=1" />
 <title>مولِّد رمز الاستجابة السريعة</title>
 <style>
-  :root { --radius: 18px; }
-  * { box-sizing: border-box; }
+  :root { --radius:16px; --btnH:38px; }
+  *{ box-sizing:border-box }
   body{
-    margin:0;min-height:100vh;display:grid;place-items:center;
+    margin:0; min-height:100vh; display:grid; place-items:center;
     font-family:Tahoma, Arial, sans-serif;
     background:linear-gradient(135deg,#1e3a8a,#3b82f6,#06b6d4);
-    background-size:300% 300%;animation:g 10s ease infinite;color:#111827;
+    background-size:300% 300%; animation:g 10s ease infinite; color:#111827;
   }
   @keyframes g{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
   .card{
-    width:min(92vw,560px);
+    width:min(92vw,520px);
     background:rgba(255,255,255,.96);
     border:1px solid rgba(17,24,39,.08);
     border-radius:var(--radius);
     box-shadow:0 10px 30px rgba(0,0,0,.15);
-    padding:clamp(18px,4vw,28px);
+    padding:clamp(16px,4vw,24px);
     text-align:center;
+    margin:auto;                /* يضمن تمركز البطاقة على كل الشاشات */
   }
   h2{
-    margin:0 0 14px;font-size:clamp(1.2rem,3.5vw,1.6rem);
-    color:#0f172a;display:inline-flex;gap:8px;align-items:center;line-height:1.2;
+    margin:0 0 12px; font-size:clamp(1.1rem,3.5vw,1.4rem);
+    color:#0f172a; display:inline-flex; gap:8px; align-items:center; line-height:1.2;
   }
-  .icon{width:1.6rem;height:1.6rem;fill:#3b82f6}
-  .row{display:grid;gap:12px;justify-items:center}
+  .icon{width:1.4rem; height:1.4rem; fill:#3b82f6}
+  .row{display:grid; gap:10px; justify-items:center}
   input[type="text"]{
-    width:100%;max-width:700px;padding:12px 14px;border-radius:10px;border:1px solid #d1d5db;
-    background:#fff;font-size:1rem;text-align:right;outline:none;
+    width:100%; max-width:680px; padding:10px 12px; border-radius:10px; border:1px solid #d1d5db;
+    background:#fff; font-size:1rem; text-align:right; outline:none;
+  }
+  .actions{
+    display:grid; gap:8px; width:100%;
+    grid-template-columns:repeat(3, minmax(0,1fr));  /* أزرار أصغر ومتمركزة */
+    justify-items:center; align-items:center;
   }
   button{
-    padding:12px 16px;border:0;border-radius:10px;background:linear-gradient(90deg,#3b82f6,#06b6d4);
-    color:#fff;font-size:1rem;cursor:pointer;transition:transform .15s ease,box-shadow .2s ease;
-    box-shadow:0 6px 16px rgba(59,130,246,.35);
+    height:var(--btnH); padding:0 12px; border:0; border-radius:10px;
+    background:linear-gradient(90deg,#3b82f6,#06b6d4);
+    color:#fff; font-size:.9rem; cursor:pointer;
+    transition:transform .12s ease, box-shadow .2s ease;
+    box-shadow:0 6px 16px rgba(59,130,246,.28); width:100%;
+    max-width:160px;             /* أصغر كما طلبت */
   }
-  button:hover{transform:translateY(-1px);box-shadow:0 10px 22px rgba(59,130,246,.4)}
+  button:hover{ transform:translateY(-1px); box-shadow:0 10px 22px rgba(59,130,246,.35) }
   .btn-outline{
-    background:#fff;color:#0f172a;border:1px solid #cfd8e3;box-shadow:none;
+    background:#fff; color:#0f172a; border:1px solid #cfd8e3; box-shadow:none;
   }
-  .btn-outline:hover{background:#f8fafc}
-  .actions{
-    display:grid;gap:10px;margin-top:8px;width:100%;
-    grid-template-columns:repeat(auto-fit,minmax(140px,1fr));
-  }
-  #qrbox{margin-top:14px;display:grid;place-items:center}
+  .btn-outline:hover{ background:#f8fafc }
+  #qrbox{ margin-top:12px; display:grid; place-items:center }
   canvas,img{
-    border-radius:12px;background:#fff;padding:8px;border:1px solid #e5e7eb;
-    width:min(85vw,420px);height:auto;
+    border-radius:12px; background:#fff; padding:6px; border:1px solid #e5e7eb;
+    width:min(80vw,360px); height:auto;   /* متكيّف لجميع الشاشات */
   }
-  .note{margin-top:6px;font-size:.9rem;color:#6b7280;min-height:1.2em}
+  .note{ margin-top:6px; font-size:.9rem; color:#6b7280; min-height:1.2em }
+  @media (max-width:420px){
+    .actions{ grid-template-columns:repeat(2,minmax(0,1fr)) }
+  }
 </style>
 </head>
 <body>
@@ -67,8 +75,7 @@
     <div class="row">
       <input id="link" type="text" placeholder="أدخل الرابط هنا" autocomplete="on" />
       <div class="actions">
-        <button id="go">إنشاء الرمز</button>
-        <button id="copyLink" class="btn-outline">نسخ الرابط</button>
+        <button id="go">إنشاء</button>
         <button id="copyImg" class="btn-outline" disabled>نسخ الصورة</button>
         <button id="saveImg" class="btn-outline" disabled>حفظ الصورة</button>
       </div>
@@ -77,9 +84,10 @@
     </div>
   </div>
 
+  <!-- مكتبة QR -->
   <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
   <script>
-    // بديل تلقائي إذا فشل تحميل المصدر الأول
+    // تحميل بديل إذا فشل المصدر الأول
     (function ensureLib(){
       if (window.QRCode) return;
       var s = document.createElement('script');
@@ -95,12 +103,11 @@
     const btnCopyImg = document.getElementById('copyImg');
     const btnSaveImg = document.getElementById('saveImg');
 
-    function displaySizes(){
-      const vw = Math.min(window.innerWidth, 1600);
-      const display = Math.max(160, Math.min(420, Math.floor(vw * 0.85)));
+    function sizes(){
+      const vw = Math.min(window.innerWidth, 1400);
+      const display = Math.max(160, Math.min(360, Math.floor(vw * 0.8)));
       const dpr = Math.min(2, window.devicePixelRatio || 1);
-      const physical = Math.round(display * dpr);
-      return { display, physical };
+      return { display, physical: Math.round(display * dpr) };
     }
 
     function clearQR(){
@@ -110,129 +117,125 @@
     }
 
     function renderQR(text){
-      clearQR();
-      elMsg.textContent = '';
-      const { display, physical } = displaySizes();
+      clearQR(); elMsg.textContent = '';
+      const { display, physical } = sizes();
 
-      if (window.QRCode){
-        new QRCode(elBox, { text, width: physical, height: physical, correctLevel: QRCode.CorrectLevel.M });
-        const el = elBox.querySelector('canvas, img');
-        if (el){ el.style.width = display + 'px'; el.style.height = display + 'px'; }
-      } else {
-        const img = new Image();
-        img.alt = 'QR';
-        img.src = 'https://api.qrserver.com/v1/create-qr-code/?size='+physical+'x'+physical+'&data=' + encodeURIComponent(text);
-        img.onload = () => { img.style.width = display + 'px'; img.style.height = display + 'px'; };
-        elBox.appendChild(img);
-        elMsg.textContent = 'تم استخدام توليد احتياطي عبر خدمة خارجية.';
+      if (!window.QRCode){
+        elMsg.textContent = 'تعذّر تحميل مكتبة QR.';
+        return;
       }
-
+      new QRCode(elBox, { text, width: physical, height: physical, correctLevel: QRCode.CorrectLevel.M });
+      const el = elBox.querySelector('canvas, img');
+      if (el){ el.style.width = display + 'px'; el.style.height = display + 'px'; }
       btnCopyImg.disabled = false;
       btnSaveImg.disabled = false;
     }
 
     function makeQR(){
       const v = (document.getElementById('link').value || '').trim();
-      if (!v){ elMsg.textContent = 'الرجاء إدخال رابط صالح.'; return; }
+      if (!v){ elMsg.textContent = 'أدخل رابطاً صالحاً.'; return; }
       lastValue = v;
       renderQR(v);
     }
 
-    async function canvasToBlob(canvas){
-      if (canvas.toBlob) {
-        return new Promise((res) => canvas.toBlob(b => res(b), 'image/png'));
-      }
-      const dataURL = canvas.toDataURL('image/png');
-      return dataURLToBlob(dataURL);
+    function imgOrCanvasToCanvas(){
+      const node = elBox.querySelector('canvas, img');
+      if (!node) return null;
+      if (node.tagName.toLowerCase() === 'canvas') return node;
+
+      // في بعض البيئات تُولِّد المكتبة <img> ببيانات data:URI — يمكن تحويلها إلى canvas بدون CORS
+      const c = document.createElement('canvas');
+      const s = sizes().physical;
+      c.width = s; c.height = s;
+      const ctx = c.getContext('2d');
+      return new Promise((resolve, reject)=>{
+        const img = new Image();
+        img.onload = ()=>{ ctx.drawImage(img, 0, 0, s, s); resolve(c); };
+        img.onerror = ()=>reject(new Error('تعذّر تحويل الصورة.'));
+        img.src = node.src;
+      });
     }
 
-    function dataURLToBlob(dataURL){
-      const arr = dataURL.split(','), mime = arr[0].match(/:(.*?);/)[1];
-      const bstr = atob(arr[1]); let n = bstr.length; const u8 = new Uint8Array(n);
-      while (n--) u8[n] = bstr.charCodeAt(n);
-      return new Blob([u8], {type: mime});
+    async function getCanvas(){
+      const node = elBox.querySelector('canvas, img');
+      if (!node) throw new Error('لا توجد صورة QR.');
+      if (node.tagName.toLowerCase() === 'canvas') return node;
+      return await imgOrCanvasToCanvas(); // تحويل IMG إلى Canvas
     }
 
-    async function qrToBlob(){
-      const el = elBox.querySelector('canvas, img');
-      if (!el) throw new Error('لا توجد صورة QR');
-      if (el.tagName.toLowerCase() === 'canvas') {
-        return await canvasToBlob(el);
-      } else {
-        // IMG: قد يكون data: أو رابط خارجي
-        try {
-          const r = await fetch(el.src, {mode:'cors'});
-          return await r.blob();
-        } catch(e){
-          // محاولة أخيرة: تحويل dataURL محلياً
-          if (el.src.startsWith('data:')) return dataURLToBlob(el.src);
-          throw e;
+    function canvasToBlob(canvas){
+      return new Promise(res=>{
+        if (canvas.toBlob) canvas.toBlob(b=>res(b),'image/png');
+        else {
+          const dataURL = canvas.toDataURL('image/png');
+          const bstr = atob(dataURL.split(',')[1]);
+          const u8 = new Uint8Array(bstr.length);
+          for (let i=0;i<bstr.length;i++) u8[i]=bstr.charCodeAt(i);
+          res(new Blob([u8],{type:'image/png'}));
         }
-      }
+      });
     }
 
     async function copyImage(){
-      try {
-        const blob = await qrToBlob();
-        if (navigator.clipboard && window.ClipboardItem) {
+      try{
+        const canvas = await getCanvas();
+        const blob = await canvasToBlob(canvas);
+        if (navigator.clipboard && window.ClipboardItem){
           await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
-          elMsg.textContent = 'تم نسخ الصورة إلى الحافظة.';
+          elMsg.textContent = 'تم نسخ الصورة.';
         } else {
-          elMsg.textContent = 'نسخ الصورة غير مدعوم. استخدم الحفظ أو انقر بالزر الأيمن/لمس مطوّل.';
+          elMsg.textContent = 'نسخ الصورة غير مدعوم في هذا المتصفح.';
         }
-      } catch(e){
-        elMsg.textContent = 'تعذّر نسخ الصورة.';
-      }
+      }catch(e){ elMsg.textContent = 'تعذّر نسخ الصورة.'; }
     }
 
     async function saveImage(){
-      try {
-        const blob = await qrToBlob();
-        const url = URL.createObjectURL(blob);
+      try{
+        const canvas = await getCanvas();
+        const blob = await canvasToBlob(canvas);
+        const file = new File([blob], 'qr.png', { type:'image/png' });
+
+        // 1) مشاركة النظام (iOS/Android) — يفتح ورقة المشاركة مع خيار "حفظ الصورة"
+        if (navigator.share && navigator.canShare && navigator.canShare({ files:[file] })){
+          await navigator.share({ files:[file], title:'QR', text:'' });
+          elMsg.textContent = 'تم فتح المشاركة. احفظ الصورة من الخيارات.';
+          return;
+        }
+
+        // 2) تنزيل مباشر (يعمل على أندرويد ومعظم المتصفحات)
+        const url = URL.createObjectURL(file);
         const a = document.createElement('a');
         a.href = url; a.download = 'qr.png';
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
-        setTimeout(() => URL.revokeObjectURL(url), 1500);
-        elMsg.textContent = 'تم حفظ الصورة.';
+        document.body.appendChild(a); a.click(); a.remove();
+        setTimeout(()=>URL.revokeObjectURL(url), 1500);
+        elMsg.textContent = 'تم حفظ الصورة (أو البدء بالتنزيل).';
+
       } catch(e){
-        // فتح الصورة في تبويب جديد كحل أخير (iOS/قيود المتصفح)
-        const el = elBox.querySelector('canvas, img');
-        if (el && el.src) { window.open(el.src, '_blank'); elMsg.textContent = 'تم فتح الصورة. احفظها يدوياً.'; return; }
-        elMsg.textContent = 'تعذّر حفظ الصورة.';
-      }
-    }
-
-    async function copyLink(){
-      const v = (document.getElementById('link').value || '').trim();
-      if (!v){ elMsg.textContent = 'لا يوجد رابط لنسخه.'; return; }
-      try{
-        if (navigator.clipboard && navigator.clipboard.writeText) {
-          await navigator.clipboard.writeText(v);
-        } else {
-          const ta = document.createElement('textarea');
-          ta.value = v; document.body.appendChild(ta); ta.select();
-          document.execCommand('copy'); ta.remove();
+        // 3) فتح في تبويب جديد للحفظ اليدوي (iOS قد يتجاهل download)
+        try{
+          const canvas = await getCanvas();
+          const dataURL = canvas.toDataURL('image/png');
+          window.open(dataURL, '_blank');  // لمس مطوّل ثم "حفظ الصورة"
+          elMsg.textContent = 'تم فتح الصورة. احفظها يدوياً.';
+        }catch(_){
+          elMsg.textContent = 'تعذّر حفظ الصورة.';
         }
-        elMsg.textContent = 'تم نسخ الرابط.';
-      }catch(e){
-        elMsg.textContent = 'تعذّر نسخ الرابط.';
       }
     }
 
-    window.addEventListener('DOMContentLoaded', function(){
+    // أحداث
+    window.addEventListener('DOMContentLoaded', ()=>{
       document.getElementById('go').addEventListener('click', makeQR);
-      document.getElementById('link').addEventListener('keydown', e => { if (e.key === 'Enter') makeQR(); });
-      document.getElementById('copyLink').addEventListener('click', copyLink);
+      document.getElementById('link').addEventListener('keydown', e=>{ if(e.key==='Enter') makeQR(); });
       btnCopyImg.addEventListener('click', copyImage);
       btnSaveImg.addEventListener('click', saveImage);
     });
 
-    window.addEventListener('resize', () => {
+    // إعادة توليد وفق الحجم الجديد (جودة أعلى على الشاشات الكبيرة/الصغيرة)
+    window.addEventListener('resize', ()=>{
       if (!lastValue) return;
       clearTimeout(resizeTimer);
-      resizeTimer = setTimeout(() => renderQR(lastValue), 150);
+      resizeTimer = setTimeout(()=>renderQR(lastValue), 140);
     });
   </script>
 
