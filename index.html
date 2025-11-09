@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1" />
 <title>مولِّد رمز الاستجابة السريعة</title>
 <style>
-  :root { --radius:16px; --btnH:38px; }
+  :root { --radius:16px; --btnH:36px; }
   *{ box-sizing:border-box }
   body{
     margin:0; min-height:100vh; display:grid; place-items:center;
@@ -22,7 +22,7 @@
     box-shadow:0 10px 30px rgba(0,0,0,.15);
     padding:clamp(16px,4vw,24px);
     text-align:center;
-    margin:auto;                /* يضمن تمركز البطاقة على كل الشاشات */
+    margin:auto;
   }
   h2{
     margin:0 0 12px; font-size:clamp(1.1rem,3.5vw,1.4rem);
@@ -36,7 +36,7 @@
   }
   .actions{
     display:grid; gap:8px; width:100%;
-    grid-template-columns:repeat(3, minmax(0,1fr));  /* أزرار أصغر ومتمركزة */
+    grid-template-columns:repeat(3, minmax(0,1fr));
     justify-items:center; align-items:center;
   }
   button{
@@ -45,7 +45,7 @@
     color:#fff; font-size:.9rem; cursor:pointer;
     transition:transform .12s ease, box-shadow .2s ease;
     box-shadow:0 6px 16px rgba(59,130,246,.28); width:100%;
-    max-width:160px;             /* أصغر كما طلبت */
+    max-width:150px;
   }
   button:hover{ transform:translateY(-1px); box-shadow:0 10px 22px rgba(59,130,246,.35) }
   .btn-outline{
@@ -55,7 +55,7 @@
   #qrbox{ margin-top:12px; display:grid; place-items:center }
   canvas,img{
     border-radius:12px; background:#fff; padding:6px; border:1px solid #e5e7eb;
-    width:min(80vw,360px); height:auto;   /* متكيّف لجميع الشاشات */
+    width:min(80vw,360px); height:auto;
   }
   .note{ margin-top:6px; font-size:.9rem; color:#6b7280; min-height:1.2em }
   @media (max-width:420px){
@@ -87,7 +87,7 @@
   <!-- مكتبة QR -->
   <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
   <script>
-    // تحميل بديل إذا فشل المصدر الأول
+    // بديل تلقائي إذا فشل المصدر الأول
     (function ensureLib(){
       if (window.QRCode) return;
       var s = document.createElement('script');
@@ -95,13 +95,13 @@
       document.head.appendChild(s);
     })();
 
-    let lastValue = '';
-    let resizeTimer;
-
     const elBox = document.getElementById('qrbox');
     const elMsg = document.getElementById('msg');
     const btnCopyImg = document.getElementById('copyImg');
     const btnSaveImg = document.getElementById('saveImg');
+
+    let lastValue = '';
+    let resizeTimer;
 
     function sizes(){
       const vw = Math.min(window.innerWidth, 1400);
@@ -125,8 +125,8 @@
         return;
       }
       new QRCode(elBox, { text, width: physical, height: physical, correctLevel: QRCode.CorrectLevel.M });
-      const el = elBox.querySelector('canvas, img');
-      if (el){ el.style.width = display + 'px'; el.style.height = display + 'px'; }
+      const node = elBox.querySelector('canvas, img');
+      if (node){ node.style.width = display + 'px'; node.style.height = display + 'px'; }
       btnCopyImg.disabled = false;
       btnSaveImg.disabled = false;
     }
@@ -138,29 +138,25 @@
       renderQR(v);
     }
 
-    function imgOrCanvasToCanvas(){
-      const node = elBox.querySelector('canvas, img');
-      if (!node) return null;
-      if (node.tagName.toLowerCase() === 'canvas') return node;
-
-      // في بعض البيئات تُولِّد المكتبة <img> ببيانات data:URI — يمكن تحويلها إلى canvas بدون CORS
-      const c = document.createElement('canvas');
-      const s = sizes().physical;
-      c.width = s; c.height = s;
-      const ctx = c.getContext('2d');
-      return new Promise((resolve, reject)=>{
-        const img = new Image();
-        img.onload = ()=>{ ctx.drawImage(img, 0, 0, s, s); resolve(c); };
-        img.onerror = ()=>reject(new Error('تعذّر تحويل الصورة.'));
-        img.src = node.src;
-      });
-    }
-
+    // تحويل عنصر (Canvas أو IMG) إلى Canvas للاستخدام في النسخ/الحفظ
     async function getCanvas(){
       const node = elBox.querySelector('canvas, img');
       if (!node) throw new Error('لا توجد صورة QR.');
+
       if (node.tagName.toLowerCase() === 'canvas') return node;
-      return await imgOrCanvasToCanvas(); // تحويل IMG إلى Canvas
+
+      // IMG -> Canvas
+      const c = document.createElement('canvas');
+      const s = sizes().physical;
+      c.width = s; c.height = s;
+      const ctx = c.getContext('2d', { willReadFrequently: true });
+      await new Promise((resolve, reject)=>{
+        const img = new Image();
+        img.onload = ()=>{ ctx.drawImage(img, 0, 0, s, s); resolve(); };
+        img.onerror = ()=>reject(new Error('تعذّر تحويل الصورة.'));
+        img.src = node.src;           // data:URI من المكتبة، آمن للسحب للرسم
+      });
+      return c;
     }
 
     function canvasToBlob(canvas){
@@ -176,6 +172,7 @@
       });
     }
 
+    // نسخ الصورة إلى الحافظة (مدعوم على كروم/أندرويد/سطح المكتب)
     async function copyImage(){
       try{
         const canvas = await getCanvas();
@@ -184,54 +181,65 @@
           await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
           elMsg.textContent = 'تم نسخ الصورة.';
         } else {
-          elMsg.textContent = 'نسخ الصورة غير مدعوم في هذا المتصفح.';
+          elMsg.textContent = 'نسخ الصورة غير مدعوم على هذا المتصفح.';
         }
       }catch(e){ elMsg.textContent = 'تعذّر نسخ الصورة.'; }
     }
 
+    // حفظ متوافق مع معظم المتصفحات + دعم iOS عبر فتح تبويب/ورقة مشاركة
     async function saveImage(){
       try{
         const canvas = await getCanvas();
+        // مسار 1: ورقة مشاركة بملف (أفضل طريقة للوصول لـ "حفظ الصورة" على iOS/Android الحديث)
         const blob = await canvasToBlob(canvas);
         const file = new File([blob], 'qr.png', { type:'image/png' });
-
-        // 1) مشاركة النظام (iOS/Android) — يفتح ورقة المشاركة مع خيار "حفظ الصورة"
         if (navigator.share && navigator.canShare && navigator.canShare({ files:[file] })){
-          await navigator.share({ files:[file], title:'QR', text:'' });
-          elMsg.textContent = 'تم فتح المشاركة. احفظ الصورة من الخيارات.';
+          await navigator.share({ files:[file], title:'QR' });
+          elMsg.textContent = 'تم فتح المشاركة للنظام.';
           return;
         }
 
-        // 2) تنزيل مباشر (يعمل على أندرويد ومعظم المتصفحات)
-        const url = URL.createObjectURL(file);
-        const a = document.createElement('a');
-        a.href = url; a.download = 'qr.png';
-        document.body.appendChild(a); a.click(); a.remove();
-        setTimeout(()=>URL.revokeObjectURL(url), 1500);
-        elMsg.textContent = 'تم حفظ الصورة (أو البدء بالتنزيل).';
+        // مسار 2: تنزيل مباشر عبر dataURL (متوافق أكثر من blob على متصفحات عديدة)
+        const dataURL = canvas.toDataURL('image/png');
 
-      } catch(e){
-        // 3) فتح في تبويب جديد للحفظ اليدوي (iOS قد يتجاهل download)
-        try{
-          const canvas = await getCanvas();
-          const dataURL = canvas.toDataURL('image/png');
-          window.open(dataURL, '_blank');  // لمس مطوّل ثم "حفظ الصورة"
-          elMsg.textContent = 'تم فتح الصورة. احفظها يدوياً.';
-        }catch(_){
-          elMsg.textContent = 'تعذّر حفظ الصورة.';
+        // كشف iOS/Safari لاستخدام فتح تبويب (download attr غير مدعوم جيداً)
+        const ua = navigator.userAgent;
+        const isIOS = /iPad|iPhone|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+        const isSafari = /^((?!chrome|android).)*safari/i.test(ua);
+
+        if (isIOS || isSafari){
+          const w = window.open('', '_blank');           // تبويب بعنصر IMG للحفظ اليدوي
+          if (w){
+            w.document.write('<meta name="viewport" content="width=device-width,initial-scale=1">');
+            w.document.write('<title>QR</title>');
+            w.document.write('<style>body{margin:0;display:grid;place-items:center;background:#fff}</style>');
+            w.document.write(`<img alt="QR" src="${dataURL}" style="width:100%;height:auto;max-width:800px;display:block;">`);
+            w.document.close();
+            elMsg.textContent = 'تم فتح الصورة. احفظها من خيارات المتصفح.';
+          } else {
+            location.href = dataURL;                     // آخر حل على iOS
+            elMsg.textContent = 'تم فتح الصورة.';
+          }
+          return;
         }
+
+        // مسار 3: تنزيل ملف على كروم/أندرويد/سطح المكتب
+        const a = document.createElement('a');
+        a.href = dataURL; a.download = 'qr.png';
+        document.body.appendChild(a); a.click(); a.remove();
+        elMsg.textContent = 'تم تنزيل الصورة.';
+      } catch(e){
+        elMsg.textContent = 'تعذّر حفظ الصورة.';
       }
     }
 
-    // أحداث
     window.addEventListener('DOMContentLoaded', ()=>{
       document.getElementById('go').addEventListener('click', makeQR);
       document.getElementById('link').addEventListener('keydown', e=>{ if(e.key==='Enter') makeQR(); });
-      btnCopyImg.addEventListener('click', copyImage);
-      btnSaveImg.addEventListener('click', saveImage);
+      document.getElementById('copyImg').addEventListener('click', copyImage);
+      document.getElementById('saveImg').addEventListener('click', saveImage);
     });
 
-    // إعادة توليد وفق الحجم الجديد (جودة أعلى على الشاشات الكبيرة/الصغيرة)
     window.addEventListener('resize', ()=>{
       if (!lastValue) return;
       clearTimeout(resizeTimer);
