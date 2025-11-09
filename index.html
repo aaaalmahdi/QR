@@ -41,7 +41,7 @@
   input[type="url"]:valid{ border-color:#10b981 }
   .actions{
     display:grid; gap:8px; width:100%;
-    grid-template-columns:repeat(auto-fit, minmax(120px,1fr));
+    grid-template-columns:repeat(2, minmax(120px,1fr));
     justify-items:center; align-items:center;
   }
   button{
@@ -88,7 +88,6 @@
       <input id="link" type="url" placeholder="https://example.com" autocomplete="url" inputmode="url" required />
       <div class="actions">
         <button id="go" type="button" title="إنشاء QR" disabled>إنشاء</button>
-        <button id="copyLink" type="button" class="btn-outline" title="نسخ الرابط">نسخ الرابط</button>
         <button id="copyImg" type="button" class="btn-outline" disabled title="نسخ الصورة">نسخ الصورة</button>
         <button id="saveImg" type="button" class="btn-outline" disabled title="حفظ الصورة">حفظ الصورة</button>
       </div>
@@ -111,7 +110,6 @@
     const elBox = document.getElementById('qrbox');
     const elMsg = document.getElementById('msg');
     const btnGo = document.getElementById('go');
-    const btnCopyLink = document.getElementById('copyLink');
     const btnCopyImg = document.getElementById('copyImg');
     const btnSaveImg = document.getElementById('saveImg');
     const linkEl = document.getElementById('link');
@@ -127,10 +125,7 @@
     }
 
     function setMsg(t){ elMsg.textContent = t || '' }
-
-    function updateGoState(){
-      btnGo.disabled = !linkEl.checkValidity();
-    }
+    function updateGoState(){ btnGo.disabled = !linkEl.checkValidity(); }
 
     function clearQR(){
       elBox.innerHTML = '';
@@ -209,23 +204,45 @@
       try{
         const canvas = await nodeToCanvas();
         const blob = await canvasToBlob(canvas);
-        const file = new File([blob], 'qr.png', { type:'image/png' });
+        const fileName = 'qr.png';
 
-        // 1) ورقة مشاركة بملف (iOS/Android حديث)
+        // 1) File System Access API (Chrome/Edge/Android حديث)
+        if (window.showSaveFilePicker) {
+          try{
+            const handle = await window.showSaveFilePicker({
+              suggestedName: fileName,
+              types: [{ description:'PNG Image', accept:{'image/png':['.png']} }]
+            });
+            const writable = await handle.createWritable();
+            await writable.write(blob);
+            await writable.close();
+            setMsg('تم الحفظ في الملفات.');
+            return;
+          } catch(e) { /* متابعة للمسارات الأخرى */ }
+        }
+
+        // 2) Web Share with files (iOS/Android حديث)
+        const file = new File([blob], fileName, { type:'image/png' });
         if (navigator.share && navigator.canShare && navigator.canShare({ files:[file] })){
           await navigator.share({ files:[file], title:'QR' });
           setMsg('تم فتح المشاركة للنظام.');
           return;
         }
 
-        // 2) تنزيل عبر dataURL (أوسع توافقاً)
-        const dataURL = canvas.toDataURL('image/png');
+        // 3) تنزيل عبر <a download> مع Blob (أوسع دعم على سطح المكتب/أندرويد)
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url; a.download = fileName;
+        document.body.appendChild(a); a.click(); a.remove();
+        setTimeout(()=>URL.revokeObjectURL(url), 1500);
+        setMsg('تم تنزيل الصورة.');
+        return;
 
-        // iOS/Safari: افتح تبويب للحفظ اليدوي
-        const ua = navigator.userAgent;
-        const isIOS = /iPad|iPhone|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-        const isSafari = /^((?!chrome|android).)*safari/i.test(ua);
-        if (isIOS || isSafari){
+      } catch(e){
+        // 4) فتح في تبويب جديد للحفظ اليدوي (حل أخير، خاصة iOS قديم)
+        try{
+          const canvas = await nodeToCanvas();
+          const dataURL = canvas.toDataURL('image/png');
           const w = window.open('', '_blank', 'noopener');
           if (w){
             w.document.write('<meta name="viewport" content="width=device-width,initial-scale=1">');
@@ -234,42 +251,19 @@
             w.document.write(`<img alt="QR" src="${dataURL}" style="width:100%;height:auto;max-width:800px;display:block;">`);
             w.document.close();
             setMsg('تم فتح الصورة. احفظها يدوياً.');
-          } else {
-            location.href = dataURL;
-            setMsg('تم فتح الصورة.');
+            return;
           }
-          return;
+          location.href = dataURL;
+          setMsg('تم فتح الصورة.');
+        }catch(_){
+          setMsg('تعذّر حفظ الصورة.');
         }
-
-        // 3) تنزيل مباشر
-        const a = document.createElement('a');
-        a.href = dataURL; a.download = 'qr.png';
-        document.body.appendChild(a); a.click(); a.remove();
-        setMsg('تم تنزيل الصورة.');
-      } catch(e){
-        setMsg('تعذّر حفظ الصورة.');
       }
-    }
-
-    async function copyLink(){
-      const v = linkEl.value.trim();
-      if (!v){ setMsg('لا يوجد رابط لنسخه.'); return; }
-      try{
-        if (navigator.clipboard && navigator.clipboard.writeText) {
-          await navigator.clipboard.writeText(v);
-        } else {
-          const ta = document.createElement('textarea');
-          ta.value = v; document.body.appendChild(ta); ta.select();
-          document.execCommand('copy'); ta.remove();
-        }
-        setMsg('تم نسخ الرابط.');
-      }catch(e){ setMsg('تعذّر نسخ الرابط.'); }
     }
 
     window.addEventListener('DOMContentLoaded', ()=>{
       updateGoState();
       btnGo.addEventListener('click', makeQR);
-      btnCopyLink.addEventListener('click', copyLink);
       btnCopyImg.addEventListener('click', copyImage);
       btnSaveImg.addEventListener('click', saveImage);
       linkEl.addEventListener('input', updateGoState);
@@ -279,14 +273,3 @@
     window.addEventListener('resize', ()=>{
       if (!lastValue) return;
       clearTimeout(resizeTimer);
-      resizeTimer = setTimeout(()=>renderQR(lastValue), 140);
-    });
-  </script>
-
-  <noscript>
-    <div style="position:fixed;inset:0;background:#fff;color:#111;padding:16px;text-align:center;">
-      JavaScript مطلوب لعرض رمز QR.
-    </div>
-  </noscript>
-</body>
-</html>
