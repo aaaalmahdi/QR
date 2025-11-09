@@ -5,18 +5,77 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>QR Generator</title>
 <style>
-body { font-family: sans-serif; text-align: center; margin: 50px; }
-input, button { margin: 6px; padding: 8px 12px; font-size: 1rem; }
-#qrcode { margin-top: 20px; }
-canvas { border: 1px solid #ddd; margin-top: 10px; }
+body {
+  font-family: "Segoe UI", Roboto, sans-serif;
+  background: linear-gradient(135deg, #f0f4ff, #fafcff);
+  min-height: 100vh;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  color: #111827;
+}
+.container {
+  background: white;
+  padding: 40px 50px;
+  border-radius: 16px;
+  box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+  text-align: center;
+}
+h2 {
+  margin-top: 0;
+  font-size: 1.8rem;
+  letter-spacing: 0.5px;
+}
+input {
+  width: 80%;
+  max-width: 400px;
+  padding: 10px 14px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 1rem;
+}
+button {
+  margin-top: 12px;
+  padding: 10px 22px;
+  font-size: 1rem;
+  background-color: #2563eb;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+button:hover { background-color: #1e3fa9; }
+#qrcode {
+  margin-top: 25px;
+  display: flex;
+  justify-content: center;
+}
+canvas {
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  background: white;
+  padding: 8px;
+}
+footer {
+  margin-top: 40px;
+  color: #6b7280;
+  font-size: 0.95rem;
+  letter-spacing: 0.4px;
+}
 </style>
 </head>
 <body>
-<h2>QR Generator</h2>
-
-<input id="linkInput" type="text" placeholder="Paste a link here">
-<button id="generateBtn">Generate</button>
-<div id="qrcode"></div>
+<div class="container">
+  <h2>QR Generator</h2>
+  <input id="linkInput" type="text" placeholder="Paste a link here">
+  <br>
+  <button id="generateBtn">Generate QR</button>
+  <div id="qrcode"></div>
+  <footer>Remember me in every QR</footer>
+</div>
 
 <script src="https://cdn.jsdelivr.net/npm/qrcodejs/qrcode.min.js"></script>
 <script>
@@ -24,7 +83,7 @@ const qrDiv = document.getElementById('qrcode');
 document.getElementById('generateBtn').onclick = () => {
   const val = document.getElementById('linkInput').value.trim();
   if (!val) return alert('Enter a link first.');
-  qrDiv.innerHTML = ''; // clear old code
+  qrDiv.innerHTML = '';
   new QRCode(qrDiv, { text: val, width: 256, height: 256 });
 };
 </script>
