@@ -12,7 +12,7 @@ canvas { border: 1px solid #ddd; margin-top: 10px; }
 </style>
 </head>
 <body>
-<h2>QR Generator for Links</h2>
+<h2>QR Generator</h2>
 
 <input id="linkInput" type="text" placeholder="Paste a link here">
 <button id="generateBtn">Generate</button>
@@ -24,7 +24,7 @@ const qrDiv = document.getElementById('qrcode');
 document.getElementById('generateBtn').onclick = () => {
   const val = document.getElementById('linkInput').value.trim();
   if (!val) return alert('Enter a link first.');
-  qrDiv.innerHTML = ''; // clear previous QR
+  qrDiv.innerHTML = ''; // clear old code
   new QRCode(qrDiv, { text: val, width: 256, height: 256 });
 };
 </script>
