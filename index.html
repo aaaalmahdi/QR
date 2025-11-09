@@ -7,7 +7,8 @@
 <style>
 body { font-family: sans-serif; text-align: center; margin: 40px; }
 input, button { margin: 8px; padding: 8px 12px; font-size: 1rem; }
-canvas { margin-top: 20px; }
+#qrcode { margin-top: 20px; display: inline-block; }
+canvas { border: 1px solid #ddd; margin-top: 10px; }
 </style>
 </head>
 <body>
@@ -17,7 +18,32 @@ canvas { margin-top: 20px; }
 <button id="generateBtn">Generate</button>
 <br>
 <input id="fileInput" type="file">
-<canvas id="canvas"></canvas>
+<div id="qrcode"></div>
 
+<!-- reliable library from JSDelivr (HTTPS + CORS OK on GitHub Pages) -->
+<script src="https://cdn.jsdelivr.net/npm/qrious@4.0.2/dist/qrious.min.js"></script>
 <script>
-// small QR code library (simplified version of Kazuhiko Arase
+const qrCanvas = document.createElement('canvas');
+qrCanvas.width = qrCanvas.height = 256;
+document.getElementById('qrcode').appendChild(qrCanvas);
+const qr = new QRious({ element: qrCanvas, size: 256, value: '' });
+
+function makeQR(text) {
+  if (!text) return alert('No data to encode.');
+  qr.value = text;
+}
+
+document.getElementById('generateBtn').onclick = () => {
+  const val = document.getElementById('linkInput').value.trim();
+  makeQR(val);
+};
+
+document.getElementById('fileInput').onchange = e => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const blobURL = URL.createObjectURL(file);
+  makeQR(blobURL);
+};
+</script>
+</body>
+</html>
