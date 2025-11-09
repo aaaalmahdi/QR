@@ -3,11 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>QR Generator (No CDN)</title>
+<title>QR Generator</title>
 <style>
 body { font-family: sans-serif; text-align: center; margin: 40px; }
 input, button { margin: 8px; padding: 8px 12px; font-size: 1rem; }
-#qrcode { margin-top: 20px; }
 canvas { margin-top: 20px; }
 </style>
 </head>
@@ -18,33 +17,7 @@ canvas { margin-top: 20px; }
 <button id="generateBtn">Generate</button>
 <br>
 <input id="fileInput" type="file">
-<div id="qrcode"></div>
+<canvas id="canvas"></canvas>
 
 <script>
-/* minimal QR implementation using Google Chart API as fallback */
-function makeQR(text) {
-  const safe = encodeURIComponent(text);
-  const url = `https://chart.googleapis.com/chart?chs=256x256&cht=qr&chl=${safe}&choe=UTF-8`;
-  const img = document.createElement('img');
-  img.src = url;
-  img.alt = text;
-  const box = document.getElementById('qrcode');
-  box.innerHTML = '';
-  box.appendChild(img);
-}
-
-document.getElementById('generateBtn').onclick = () => {
-  const val = document.getElementById('linkInput').value.trim();
-  if (!val) return alert('Enter a link first.');
-  makeQR(val);
-};
-
-document.getElementById('fileInput').onchange = e => {
-  const file = e.target.files[0];
-  if (!file) return;
-  const blobURL = URL.createObjectURL(file);
-  makeQR(blobURL);
-};
-</script>
-</body>
-</html>
+// small QR code library (simplified version of Kazuhiko Arase
