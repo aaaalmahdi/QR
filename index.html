@@ -2,47 +2,49 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Quick QR Generator</title>
+<title>QR Generator</title>
 <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
 <style>
-body { font-family: system-ui, sans-serif; margin: 40px; text-align: center; }
-input, button { margin: 8px; padding: 8px; }
-#qrcode canvas, #qrcode img { margin-top: 20px; }
+body { font-family: sans-serif; text-align: center; margin: 50px; }
+input, button { padding: 8px 12px; margin: 6px; font-size: 1rem; }
+#qrcode canvas { margin-top: 20px; }
 </style>
 </head>
 <body>
 <h2>QR Generator</h2>
 
-<!-- Option 1: make QR from link -->
-<input id="linkInput" type="text" placeholder="Enter or paste a link">
-<button onclick="makeQR()">Generate</button>
+<input id="linkInput" type="text" placeholder="Paste a link here">
+<button id="generateBtn">Generate</button>
 <br>
-
-<!-- Option 2: upload a file -->
-<input id="fileInput" type="file" onchange="uploadFile()">
+<input id="fileInput" type="file">
 
 <div id="qrcode"></div>
 
 <script>
-// Create QR for a given text
-function makeQR(text) {
-  const data = text || document.getElementById('linkInput').value;
-  if (!data) return;
+// draw QR into div
+function showQR(text) {
   const box = document.getElementById('qrcode');
   box.innerHTML = '';
-  QRCode.toCanvas(data, { width: 256 }, function (err, canvas) {
-    if (err) return alert('Error: ' + err);
-    box.appendChild(canvas);
+  QRCode.toCanvas(text, { width: 256 }, (err, canvas) => {
+    if (err) alert(err);
+    else box.appendChild(canvas);
   });
 }
 
-// File upload to local temporary URL (for demo only)
-function uploadFile() {
-  const file = document.getElementById('fileInput').files[0];
+// make QR from link
+document.getElementById('generateBtn').addEventListener('click', () => {
+  const val = document.getElementById('linkInput').value.trim();
+  if (val) showQR(val);
+  else alert('Enter a link first.');
+});
+
+// make QR from uploaded file (local blob URL)
+document.getElementById('fileInput').addEventListener('change', e => {
+  const file = e.target.files[0];
   if (!file) return;
-  const fileURL = URL.createObjectURL(file); // local blob URL
-  makeQR(fileURL);
-}
+  const blobURL = URL.createObjectURL(file);
+  showQR(blobURL);
+});
 </script>
 </body>
 </html>
