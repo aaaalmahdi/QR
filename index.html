@@ -10,8 +10,7 @@
   *{ box-sizing:border-box }
   html,body{ height:100% }
   body{
-    margin:0;
-    min-height:100vh; min-height:100svh;
+    margin:0; min-height:100vh; min-height:100svh;
     display:flex; align-items:center; justify-content:center;
     font-family:Tahoma, Arial, sans-serif;
     -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale;
@@ -36,12 +35,10 @@
   }
   .row{display:flex; flex-direction:column; gap:10px; align-items:center}
   label{width:100%;max-width:700px;text-align:right;color:#0f172a;font-size:.95rem}
-  input[type="url"]{
+  input[type="text"]{
     width:100%; max-width:700px; padding:10px 12px; border-radius:10px; border:1px solid #d1d5db;
     background:#fff; font-size:1rem; text-align:right; outline:none;
   }
-  input[type="url"]:invalid{ border-color:#ef4444 }
-  input[type="url"]:valid{ border-color:#10b981 }
   .actions{ display:flex; flex-wrap:wrap; gap:8px; justify-content:center; width:100% }
   button{
     height:var(--btnH); padding:0 10px; border:0; border-radius:10px; touch-action:manipulation;
@@ -50,7 +47,6 @@
     transition:transform .12s ease, box-shadow .2s ease, opacity .2s ease;
     box-shadow:0 6px 16px rgba(59,130,246,.28); width:140px;
   }
-  button[disabled]{opacity:.6; cursor:not-allowed}
   button:hover{ transform:translateY(-1px); box-shadow:0 10px 22px rgba(59,130,246,.35) }
   .btn-outline{ background:#fff; color:#0f172a; border:1px solid #cfd8e3; box-shadow:none }
   #qrbox{ margin-top:12px; width:100% }
@@ -65,7 +61,7 @@
   @media (prefers-color-scheme: dark){
     .card { background: rgba(17,25,40,.9); border-color: rgba(255,255,255,.08); }
     h2, .note, label { color: #e5e7eb; }
-    input[type="url"] { background:#0b1220; color:#e5e7eb; border-color:#334155; }
+    input[type="text"] { background:#0b1220; color:#e5e7eb; border-color:#334155; }
     .btn-outline { background:#0b1220; color:#e5e7eb; border-color:#334155; }
   }
 </style>
@@ -75,10 +71,10 @@
     <h2>مولِّد رمز الاستجابة السريعة (QR)</h2>
 
     <div class="row">
-      <label for="link">الرابط</label>
-      <input id="link" type="url" placeholder="https://example.com" autocomplete="url" inputmode="url" required />
+      <label for="link">النص أو الرابط</label>
+      <input id="link" type="text" placeholder="https://example.com أو أي نص" autocomplete="on" />
       <div class="actions">
-        <button id="go" type="button" title="إنشاء QR" disabled>إنشاء</button>
+        <button id="go" type="button" title="إنشاء QR">إنشاء</button>
         <button id="copyImg" type="button" class="btn-outline" disabled title="نسخ الصورة">نسخ الصورة</button>
         <button id="saveImg" type="button" class="btn-outline" disabled title="حفظ الصورة">حفظ الصورة</button>
       </div>
@@ -87,10 +83,9 @@
     </div>
   </div>
 
-  <!-- JS LIBRARY -->
+  <!-- مكتبة QR -->
   <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
   <script>
-    // Fallback loader if first CDN fails
     (function ensureLib(){
       if (window.QRCode) return;
       var s = document.createElement('script');
@@ -98,7 +93,6 @@
       document.head.appendChild(s);
     })();
 
-    // --- App code (must exist in the deployed file) ---
     const elBox = document.getElementById('qrbox');
     const elMsg = document.getElementById('msg');
     const btnGo = document.getElementById('go');
@@ -117,7 +111,6 @@
     }
 
     function setMsg(t){ elMsg.textContent = t || '' }
-    function updateGoState(){ btnGo.disabled = !linkEl.checkValidity(); }
 
     function clearQR(){
       elBox.innerHTML = '';
@@ -129,10 +122,7 @@
       clearQR(); setMsg('');
       const { display, physical } = sizes();
 
-      if (!window.QRCode){
-        setMsg('تعذّر تحميل مكتبة QR. أعد التحميل.');
-        return;
-      }
+      if (!window.QRCode){ setMsg('تعذّر تحميل مكتبة QR.'); return; }
       new QRCode(elBox, { text, width: physical, height: physical, correctLevel: QRCode.CorrectLevel.M });
       const node = elBox.querySelector('canvas, img');
       if (node){ node.style.width = display + 'px'; node.style.height = display + 'px'; }
@@ -141,9 +131,8 @@
     }
 
     function makeQR(){
-      if (!linkEl.checkValidity()){ setMsg('أدخل رابطاً صالحاً (https://...)'); return; }
-      const v = linkEl.value.trim();
-      if (!v){ setMsg('أدخل رابطاً.'); return; }
+      const v = (linkEl.value || '').trim();
+      if (!v){ setMsg('اكتب أي نص أو رابط.'); return; }
       lastValue = v;
       renderQR(v);
     }
@@ -187,7 +176,7 @@
           await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
           setMsg('تم نسخ الصورة.');
         } else {
-          setMsg('نسخ الصورة غير مدعوم في هذا المتصفح.');
+          setMsg('نسخ الصورة غير مدعوم.');
         }
       }catch(e){ setMsg('تعذّر نسخ الصورة.'); }
     }
@@ -247,12 +236,10 @@
       }
     }
 
-    // Wire up
     window.addEventListener('DOMContentLoaded', ()=>{
       btnGo.addEventListener('click', makeQR);
       btnCopyImg.addEventListener('click', copyImage);
       btnSaveImg.addEventListener('click', saveImage);
-      linkEl.addEventListener('input', ()=>{ btnGo.disabled = !linkEl.checkValidity(); });
       linkEl.addEventListener('keydown', e=>{ if(e.key==='Enter') makeQR(); });
     });
 
