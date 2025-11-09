@@ -3,11 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <title>QR Generator</title>
-<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+<meta name="viewport" content="width=device-width,initial-scale=1">
 <style>
-body { font-family: sans-serif; text-align: center; margin: 50px; }
-input, button { padding: 8px 12px; margin: 6px; font-size: 1rem; }
-#qrcode canvas { margin-top: 20px; }
+body { font-family: sans-serif; text-align: center; margin: 40px; }
+input, button { padding: 8px 12px; margin: 8px; font-size: 1rem; }
+#qrcode { margin-top: 20px; }
 </style>
 </head>
 <body>
@@ -20,30 +20,38 @@ input, button { padding: 8px 12px; margin: 6px; font-size: 1rem; }
 
 <div id="qrcode"></div>
 
+<!-- load library after page so QRCode exists -->
+<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
 <script>
-// draw QR into div
-function showQR(text) {
+window.addEventListener('DOMContentLoaded', () => {
   const box = document.getElementById('qrcode');
-  box.innerHTML = '';
-  QRCode.toCanvas(text, { width: 256 }, (err, canvas) => {
-    if (err) alert(err);
-    else box.appendChild(canvas);
-  });
-}
+  const input = document.getElementById('linkInput');
+  const genBtn = document.getElementById('generateBtn');
+  const fileInput = document.getElementById('fileInput');
 
-// make QR from link
-document.getElementById('generateBtn').addEventListener('click', () => {
-  const val = document.getElementById('linkInput').value.trim();
-  if (val) showQR(val);
-  else alert('Enter a link first.');
-});
+  function showQR(text) {
+    box.innerHTML = '';
+    QRCode.toCanvas(text, { width: 256 }, (err, canvas) => {
+      if (err) {
+        alert('Error: ' + err);
+      } else {
+        box.appendChild(canvas);
+      }
+    });
+  }
 
-// make QR from uploaded file (local blob URL)
-document.getElementById('fileInput').addEventListener('change', e => {
-  const file = e.target.files[0];
-  if (!file) return;
-  const blobURL = URL.createObjectURL(file);
-  showQR(blobURL);
+  genBtn.onclick = () => {
+    const val = input.value.trim();
+    if (!val) return alert('Enter a link first.');
+    showQR(val);
+  };
+
+  fileInput.onchange = () => {
+    const file = fileInput.files[0];
+    if (!file) return;
+    const blobURL = URL.createObjectURL(file);
+    showQR(blobURL);
+  };
 });
 </script>
 </body>
