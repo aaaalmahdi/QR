@@ -1,12 +1,12 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>QR Generator</title>
+<title>مولّد رمز الاستجابة السريعة</title>
 <style>
 body {
-  font-family: "Segoe UI", Roboto, sans-serif;
+  font-family: "Cairo", "Tahoma", sans-serif;
   background: linear-gradient(135deg, #f0f4ff, #fafcff);
   min-height: 100vh;
   margin: 0;
@@ -22,6 +22,7 @@ body {
   border-radius: 16px;
   box-shadow: 0 8px 25px rgba(0,0,0,0.1);
   text-align: center;
+  direction: rtl;
 }
 h2 {
   margin-top: 0;
@@ -35,6 +36,7 @@ input {
   border: 1px solid #d1d5db;
   border-radius: 8px;
   font-size: 1rem;
+  text-align: right;
 }
 button {
   margin-top: 12px;
@@ -69,12 +71,12 @@ footer {
 </head>
 <body>
 <div class="container">
-  <h2>QR Generator</h2>
-  <input id="linkInput" type="text" placeholder="Paste a link here">
+  <h2>مولّد رمز الاستجابة السريعة (QR)</h2>
+  <input id="linkInput" type="text" placeholder="أدخل الرابط هنا">
   <br>
-  <button id="generateBtn">Generate QR</button>
+  <button id="generateBtn">إنشاء الرمز</button>
   <div id="qrcode"></div>
-  <footer>Remember me in every QR</footer>
+  <footer>تذكرني في كل رمز</footer>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/qrcodejs/qrcode.min.js"></script>
@@ -82,7 +84,7 @@ footer {
 const qrDiv = document.getElementById('qrcode');
 document.getElementById('generateBtn').onclick = () => {
   const val = document.getElementById('linkInput').value.trim();
-  if (!val) return alert('Enter a link first.');
+  if (!val) return alert('الرجاء إدخال رابط أولاً');
   qrDiv.innerHTML = '';
   new QRCode(qrDiv, { text: val, width: 256, height: 256 });
 };
