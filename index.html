@@ -4,90 +4,56 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>مولّد رمز الاستجابة السريعة</title>
+<link href="https://cdn.jsdelivr.net/npm/remixicon@4.3.0/fonts/remixicon.css" rel="stylesheet">
 <style>
 body {
-  font-family: "Cairo", "Tahoma", sans-serif;
-  background: linear-gradient(135deg, #f0f4ff, #fafcff);
-  min-height: 100vh;
+  font-family: "Cairo", sans-serif;
   margin: 0;
+  padding: 0;
+  min-height: 100vh;
   display: flex;
-  flex-direction: column;
   justify-content: center;
   align-items: center;
-  color: #111827;
+  background: linear-gradient(135deg, #1e3a8a, #3b82f6, #06b6d4);
+  background-size: 300% 300%;
+  animation: gradientShift 10s ease infinite;
+  color: #fff;
+}
+@keyframes gradientShift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
 }
 .container {
-  background: white;
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(255,255,255,0.25);
+  border-radius: 20px;
   padding: 40px 50px;
-  border-radius: 16px;
-  box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+  width: 90%;
+  max-width: 420px;
   text-align: center;
-  direction: rtl;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.25);
 }
 h2 {
-  margin-top: 0;
   font-size: 1.8rem;
-  letter-spacing: 0.5px;
-}
-input {
-  width: 80%;
-  max-width: 400px;
-  padding: 10px 14px;
-  border: 1px solid #d1d5db;
-  border-radius: 8px;
-  font-size: 1rem;
-  text-align: right;
-}
-button {
-  margin-top: 12px;
-  padding: 10px 22px;
-  font-size: 1rem;
-  background-color: #2563eb;
-  color: white;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: background-color 0.2s;
-}
-button:hover { background-color: #1e3fa9; }
-#qrcode {
-  margin-top: 25px;
+  margin-bottom: 1rem;
   display: flex;
   justify-content: center;
+  align-items: center;
+  gap: 8px;
 }
-canvas {
-  border: 1px solid #e5e7eb;
-  border-radius: 12px;
-  background: white;
-  padding: 8px;
+h2 i {
+  font-size: 1.8rem;
+  color: #93c5fd;
 }
-footer {
-  margin-top: 40px;
-  color: #6b7280;
-  font-size: 0.95rem;
-  letter-spacing: 0.4px;
-}
-</style>
-</head>
-<body>
-<div class="container">
-  <h2>مولّد رمز الاستجابة السريعة (QR)</h2>
-  <input id="linkInput" type="text" placeholder="أدخل الرابط هنا">
-  <br>
-  <button id="generateBtn">إنشاء الرمز</button>
-  <div id="qrcode"></div>
-  <footer>تذكرني في كل رمز</footer>
-</div>
-
-<script src="https://cdn.jsdelivr.net/npm/qrcodejs/qrcode.min.js"></script>
-<script>
-const qrDiv = document.getElementById('qrcode');
-document.getElementById('generateBtn').onclick = () => {
-  const val = document.getElementById('linkInput').value.trim();
-  if (!val) return alert('الرجاء إدخال رابط أولاً');
-  qrDiv.innerHTML = '';
-  new QRCode(qrDiv, { text: val, width: 256, height: 256 });
-};
-</script>
-</body>
-</html>
+input {
+  width: 90%;
+  padding: 12px 14px;
+  border: none;
+  border-radius: 10px;
+  font-size: 1rem;
+  text-align: right;
+  outline: none;
+  margin-bottom: 15px;
+  box-shadow: 0 
