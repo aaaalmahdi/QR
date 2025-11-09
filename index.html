@@ -17,7 +17,7 @@
   }
   @keyframes g{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
   .card{
-    width:min(92vw,520px);
+    width:min(92vw,560px);
     background:rgba(255,255,255,.96);
     border:1px solid rgba(17,24,39,.08);
     border-radius:var(--radius);
@@ -32,23 +32,27 @@
   }
   .icon{width:1.4rem; height:1.4rem; fill:#3b82f6}
   .row{display:grid; gap:10px; justify-items:center}
-  input[type="text"]{
-    width:100%; max-width:680px; padding:10px 12px; border-radius:10px; border:1px solid #d1d5db;
+  label{width:100%;max-width:700px;text-align:right;color:#0f172a;font-size:.95rem}
+  input[type="url"]{
+    width:100%; max-width:700px; padding:10px 12px; border-radius:10px; border:1px solid #d1d5db;
     background:#fff; font-size:1rem; text-align:right; outline:none;
   }
+  input[type="url"]:invalid{ border-color:#ef4444 }
+  input[type="url"]:valid{ border-color:#10b981 }
   .actions{
     display:grid; gap:8px; width:100%;
-    grid-template-columns:repeat(3, minmax(0,1fr));
+    grid-template-columns:repeat(auto-fit, minmax(120px,1fr));
     justify-items:center; align-items:center;
   }
   button{
     height:var(--btnH); padding:0 10px; border:0; border-radius:10px; touch-action:manipulation;
     background:linear-gradient(90deg,#3b82f6,#06b6d4);
     color:#fff; font-size:.9rem; cursor:pointer;
-    transition:transform .12s ease, box-shadow .2s ease;
+    transition:transform .12s ease, box-shadow .2s ease, opacity .2s ease;
     box-shadow:0 6px 16px rgba(59,130,246,.28); width:100%;
-    max-width:150px;
+    max-width:160px;
   }
+  button[disabled]{opacity:.6; cursor:not-allowed}
   button:hover{ transform:translateY(-1px); box-shadow:0 10px 22px rgba(59,130,246,.35) }
   .btn-outline{
     background:#fff; color:#0f172a; border:1px solid #cfd8e3; box-shadow:none;
@@ -60,13 +64,18 @@
     width:min(80vw,360px); height:auto;
   }
   .note{ margin-top:6px; font-size:.9rem; color:#6b7280; min-height:1.2em; text-align:center }
-  @media (max-width:420px){
-    .actions{ grid-template-columns:repeat(2,minmax(0,1fr)) }
+  @media (pointer:coarse){ button{ min-height:44px } }
+  @media (prefers-reduced-motion: reduce){ body{ animation:none } }
+  @media (prefers-color-scheme: dark){
+    .card { background: rgba(17,25,40,.9); border-color: rgba(255,255,255,.08); }
+    h2, .note, label { color: #e5e7eb; }
+    input[type="url"] { background:#0b1220; color:#e5e7eb; border-color:#334155; }
+    .btn-outline { background:#0b1220; color:#e5e7eb; border-color:#334155; }
   }
 </style>
 </head>
 <body>
-  <div class="card" role="application" aria-label="مولّد رمز QR">
+  <div class="card" aria-label="مولّد رمز QR">
     <h2>
       <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
         <path d="M3 3h8v8H3V3zm2 2v4h4V5H5zm10-2h6v6h-6V3zm2 2v2h2V5h-2zM3 13h8v8H3v-8zm2 2v4h4v-4H5zm10 0h2v2h-2v-2zm4 0h2v2h-2v-2zm-4 4h2v2h-2v-2zm4 0h2v2h-2v-2zm-4 4h6v2h-6v-2z"/>
@@ -75,20 +84,23 @@
     </h2>
 
     <div class="row">
-      <input id="link" type="text" placeholder="أدخل الرابط هنا" autocomplete="on" inputmode="url" />
+      <label for="link">الرابط</label>
+      <input id="link" type="url" placeholder="https://example.com" autocomplete="url" inputmode="url" required />
       <div class="actions">
-        <button id="go" type="button" title="إنشاء QR">إنشاء</button>
+        <button id="go" type="button" title="إنشاء QR" disabled>إنشاء</button>
+        <button id="copyLink" type="button" class="btn-outline" title="نسخ الرابط">نسخ الرابط</button>
         <button id="copyImg" type="button" class="btn-outline" disabled title="نسخ الصورة">نسخ الصورة</button>
         <button id="saveImg" type="button" class="btn-outline" disabled title="حفظ الصورة">حفظ الصورة</button>
       </div>
-      <div id="qrbox" aria-live="polite"></div>
-      <div id="msg" class="note"></div>
+      <div id="qrbox" aria-live="polite" aria-atomic="true"></div>
+      <div id="msg" class="note" aria-live="polite" aria-atomic="true"></div>
     </div>
   </div>
 
   <!-- مكتبة QR -->
   <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
   <script>
+    // تحميل بديل إذا فشل المصدر الأول
     (function ensureLib(){
       if (window.QRCode) return;
       var s = document.createElement('script');
@@ -98,8 +110,11 @@
 
     const elBox = document.getElementById('qrbox');
     const elMsg = document.getElementById('msg');
+    const btnGo = document.getElementById('go');
+    const btnCopyLink = document.getElementById('copyLink');
     const btnCopyImg = document.getElementById('copyImg');
     const btnSaveImg = document.getElementById('saveImg');
+    const linkEl = document.getElementById('link');
 
     let lastValue = '';
     let resizeTimer;
@@ -111,6 +126,12 @@
       return { display, physical: Math.round(display * dpr) };
     }
 
+    function setMsg(t){ elMsg.textContent = t || '' }
+
+    function updateGoState(){
+      btnGo.disabled = !linkEl.checkValidity();
+    }
+
     function clearQR(){
       elBox.innerHTML = '';
       btnCopyImg.disabled = true;
@@ -118,11 +139,11 @@
     }
 
     function renderQR(text){
-      clearQR(); elMsg.textContent = '';
+      clearQR(); setMsg('');
       const { display, physical } = sizes();
 
       if (!window.QRCode){
-        elMsg.textContent = 'تعذّر تحميل مكتبة QR.';
+        setMsg('تعذّر تحميل مكتبة QR. أعد التحميل.');
         return;
       }
       new QRCode(elBox, { text, width: physical, height: physical, correctLevel: QRCode.CorrectLevel.M });
@@ -133,8 +154,9 @@
     }
 
     function makeQR(){
-      const v = (document.getElementById('link').value || '').trim();
-      if (!v){ elMsg.textContent = 'أدخل رابطاً صالحاً.'; return; }
+      if (!linkEl.checkValidity()){ setMsg('أدخل رابطاً صالحاً (https://...)'); return; }
+      const v = linkEl.value.trim();
+      if (!v){ setMsg('أدخل رابطاً.'); return; }
       lastValue = v;
       renderQR(v);
     }
@@ -152,7 +174,7 @@
         const img = new Image();
         img.onload = ()=>{ ctx.drawImage(img, 0, 0, s, s); resolve(); };
         img.onerror = ()=>reject(new Error('تعذّر تحويل الصورة.'));
-        img.src = node.src; // data:URI من المكتبة، آمن
+        img.src = node.src; // data:URI من المكتبة
       });
       return c;
     }
@@ -176,11 +198,11 @@
         const blob = await canvasToBlob(canvas);
         if (navigator.clipboard && window.ClipboardItem){
           await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
-          elMsg.textContent = 'تم نسخ الصورة.';
+          setMsg('تم نسخ الصورة.');
         } else {
-          elMsg.textContent = 'نسخ الصورة غير مدعوم في هذا المتصفح.';
+          setMsg('نسخ الصورة غير مدعوم في هذا المتصفح.');
         }
-      }catch(e){ elMsg.textContent = 'تعذّر نسخ الصورة.'; }
+      }catch(e){ setMsg('تعذّر نسخ الصورة.'); }
     }
 
     async function saveImage(){
@@ -189,17 +211,17 @@
         const blob = await canvasToBlob(canvas);
         const file = new File([blob], 'qr.png', { type:'image/png' });
 
-        // 1) ورقة مشاركة (أفضل دعم على iOS/Android الحديث)
+        // 1) ورقة مشاركة بملف (iOS/Android حديث)
         if (navigator.share && navigator.canShare && navigator.canShare({ files:[file] })){
           await navigator.share({ files:[file], title:'QR' });
-          elMsg.textContent = 'تم فتح المشاركة للنظام.';
+          setMsg('تم فتح المشاركة للنظام.');
           return;
         }
 
         // 2) تنزيل عبر dataURL (أوسع توافقاً)
         const dataURL = canvas.toDataURL('image/png');
 
-        // iOS/Safari: افتح في تبويب للحفظ اليدوي
+        // iOS/Safari: افتح تبويب للحفظ اليدوي
         const ua = navigator.userAgent;
         const isIOS = /iPad|iPhone|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
         const isSafari = /^((?!chrome|android).)*safari/i.test(ua);
@@ -211,29 +233,47 @@
             w.document.write('<style>html,body{margin:0;height:100%}body{display:grid;place-items:center;background:#fff}</style>');
             w.document.write(`<img alt="QR" src="${dataURL}" style="width:100%;height:auto;max-width:800px;display:block;">`);
             w.document.close();
-            elMsg.textContent = 'تم فتح الصورة. احفظها يدوياً.';
+            setMsg('تم فتح الصورة. احفظها يدوياً.');
           } else {
             location.href = dataURL;
-            elMsg.textContent = 'تم فتح الصورة.';
+            setMsg('تم فتح الصورة.');
           }
           return;
         }
 
-        // 3) تنزيل ملف مباشر لبقية المتصفحات
+        // 3) تنزيل مباشر
         const a = document.createElement('a');
         a.href = dataURL; a.download = 'qr.png';
         document.body.appendChild(a); a.click(); a.remove();
-        elMsg.textContent = 'تم تنزيل الصورة.';
+        setMsg('تم تنزيل الصورة.');
       } catch(e){
-        elMsg.textContent = 'تعذّر حفظ الصورة.';
+        setMsg('تعذّر حفظ الصورة.');
       }
     }
 
+    async function copyLink(){
+      const v = linkEl.value.trim();
+      if (!v){ setMsg('لا يوجد رابط لنسخه.'); return; }
+      try{
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          await navigator.clipboard.writeText(v);
+        } else {
+          const ta = document.createElement('textarea');
+          ta.value = v; document.body.appendChild(ta); ta.select();
+          document.execCommand('copy'); ta.remove();
+        }
+        setMsg('تم نسخ الرابط.');
+      }catch(e){ setMsg('تعذّر نسخ الرابط.'); }
+    }
+
     window.addEventListener('DOMContentLoaded', ()=>{
-      document.getElementById('go').addEventListener('click', makeQR);
-      document.getElementById('link').addEventListener('keydown', e=>{ if(e.key==='Enter') makeQR(); });
-      document.getElementById('copyImg').addEventListener('click', copyImage);
-      document.getElementById('saveImg').addEventListener('click', saveImage);
+      updateGoState();
+      btnGo.addEventListener('click', makeQR);
+      btnCopyLink.addEventListener('click', copyLink);
+      btnCopyImg.addEventListener('click', copyImage);
+      btnSaveImg.addEventListener('click', saveImage);
+      linkEl.addEventListener('input', updateGoState);
+      linkEl.addEventListener('keydown', e=>{ if(e.key==='Enter') makeQR(); });
     });
 
     window.addEventListener('resize', ()=>{
