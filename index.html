@@ -2,41 +2,30 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>QR Generator</title>
 <meta name="viewport" content="width=device-width,initial-scale=1">
+<title>QR Generator</title>
 <style>
 body { font-family: sans-serif; text-align: center; margin: 50px; }
 input, button { margin: 6px; padding: 8px 12px; font-size: 1rem; }
 #qrcode { margin-top: 20px; }
+canvas { border: 1px solid #ddd; margin-top: 10px; }
 </style>
 </head>
 <body>
-<h2>QR Generator</h2>
+<h2>QR Generator for Links</h2>
 
 <input id="linkInput" type="text" placeholder="Paste a link here">
 <button id="generateBtn">Generate</button>
-<br>
-<input id="fileInput" type="file">
 <div id="qrcode"></div>
 
-<!-- add QRCode.js library -->
 <script src="https://cdn.jsdelivr.net/npm/qrcodejs/qrcode.min.js"></script>
 <script>
 const qrDiv = document.getElementById('qrcode');
-
 document.getElementById('generateBtn').onclick = () => {
   const val = document.getElementById('linkInput').value.trim();
   if (!val) return alert('Enter a link first.');
-  qrDiv.innerHTML = '';
+  qrDiv.innerHTML = ''; // clear previous QR
   new QRCode(qrDiv, { text: val, width: 256, height: 256 });
-};
-
-document.getElementById('fileInput').onchange = e => {
-  const file = e.target.files[0];
-  if (!file) return;
-  const blobURL = URL.createObjectURL(file);
-  qrDiv.innerHTML = '';
-  new QRCode(qrDiv, { text: blobURL, width: 256, height: 256 });
 };
 </script>
 </body>
