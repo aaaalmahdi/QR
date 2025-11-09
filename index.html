@@ -2,12 +2,13 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>QR Generator</title>
 <meta name="viewport" content="width=device-width,initial-scale=1">
+<title>QR Generator (No CDN)</title>
 <style>
 body { font-family: sans-serif; text-align: center; margin: 40px; }
-input, button { padding: 8px 12px; margin: 8px; font-size: 1rem; }
+input, button { margin: 8px; padding: 8px 12px; font-size: 1rem; }
 #qrcode { margin-top: 20px; }
+canvas { margin-top: 20px; }
 </style>
 </head>
 <body>
@@ -17,42 +18,33 @@ input, button { padding: 8px 12px; margin: 8px; font-size: 1rem; }
 <button id="generateBtn">Generate</button>
 <br>
 <input id="fileInput" type="file">
-
 <div id="qrcode"></div>
 
-<!-- load library after page so QRCode exists -->
-<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
 <script>
-window.addEventListener('DOMContentLoaded', () => {
+/* minimal QR implementation using Google Chart API as fallback */
+function makeQR(text) {
+  const safe = encodeURIComponent(text);
+  const url = `https://chart.googleapis.com/chart?chs=256x256&cht=qr&chl=${safe}&choe=UTF-8`;
+  const img = document.createElement('img');
+  img.src = url;
+  img.alt = text;
   const box = document.getElementById('qrcode');
-  const input = document.getElementById('linkInput');
-  const genBtn = document.getElementById('generateBtn');
-  const fileInput = document.getElementById('fileInput');
+  box.innerHTML = '';
+  box.appendChild(img);
+}
 
-  function showQR(text) {
-    box.innerHTML = '';
-    QRCode.toCanvas(text, { width: 256 }, (err, canvas) => {
-      if (err) {
-        alert('Error: ' + err);
-      } else {
-        box.appendChild(canvas);
-      }
-    });
-  }
+document.getElementById('generateBtn').onclick = () => {
+  const val = document.getElementById('linkInput').value.trim();
+  if (!val) return alert('Enter a link first.');
+  makeQR(val);
+};
 
-  genBtn.onclick = () => {
-    const val = input.value.trim();
-    if (!val) return alert('Enter a link first.');
-    showQR(val);
-  };
-
-  fileInput.onchange = () => {
-    const file = fileInput.files[0];
-    if (!file) return;
-    const blobURL = URL.createObjectURL(file);
-    showQR(blobURL);
-  };
-});
+document.getElementById('fileInput').onchange = e => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const blobURL = URL.createObjectURL(file);
+  makeQR(blobURL);
+};
 </script>
 </body>
 </html>
