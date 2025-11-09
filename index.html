@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Quick QR Generator</title>
+<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+<style>
+body { font-family: system-ui, sans-serif; margin: 40px; text-align: center; }
+input, button { margin: 8px; padding: 8px; }
+#qrcode canvas, #qrcode img { margin-top: 20px; }
+</style>
+</head>
+<body>
+<h2>QR Generator</h2>
+
+<!-- Option 1: make QR from link -->
+<input id="linkInput" type="text" placeholder="Enter or paste a link">
+<button onclick="makeQR()">Generate</button>
+<br>
+
+<!-- Option 2: upload a file -->
+<input id="fileInput" type="file" onchange="uploadFile()">
+
+<div id="qrcode"></div>
+
+<script>
+// Create QR for a given text
+function makeQR(text) {
+  const data = text || document.getElementById('linkInput').value;
+  if (!data) return;
+  const box = document.getElementById('qrcode');
+  box.innerHTML = '';
+  QRCode.toCanvas(data, { width: 256 }, function (err, canvas) {
+    if (err) return alert('Error: ' + err);
+    box.appendChild(canvas);
+  });
+}
+
+// File upload to local temporary URL (for demo only)
+function uploadFile() {
+  const file = document.getElementById('fileInput').files[0];
+  if (!file) return;
+  const fileURL = URL.createObjectURL(file); // local blob URL
+  makeQR(fileURL);
+}
+</script>
+</body>
+</html>
