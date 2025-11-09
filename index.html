@@ -68,4 +68,102 @@
     border-radius: 10px;
     background: linear-gradient(90deg, #3b82f6, #06b6d4);
     color: #fff;
-    font-size: 1re
+    font-size: 1rem;
+    cursor: pointer;
+    transition: transform .15s ease, box-shadow .2s ease;
+    box-shadow: 0 6px 16px rgba(59,130,246,0.35);
+  }
+  button:hover { transform: translateY(-1px); box-shadow: 0 10px 22px rgba(59,130,246,0.4); }
+  #qrbox { margin-top: 18px; display: grid; place-items: center; min-height: 280px; }
+  canvas, img {
+    border-radius: 12px;
+    background: #fff;
+    padding: 8px;
+    border: 1px solid #e5e7eb;
+  }
+  .note {
+    margin-top: 8px;
+    font-size: .9rem;
+    color: #6b7280;
+    min-height: 1.2em;
+  }
+  footer {
+    margin-top: 18px;
+    font-size: .8rem;
+    color: #64748b;
+    letter-spacing: .3px;
+  }
+</style>
+</head>
+<body>
+  <div class="card">
+    <h2>
+      <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M3 3h8v8H3V3zm2 2v4h4V5H5zm10-2h6v6h-6V3zm2 2v2h2V5h-2zM3 13h8v8H3v-8zm2 2v4h4v-4H5zm10 0h2v2h-2v-2zm4 0h2v2h-2v-2zm-4 4h2v2h-2v-2zm4 0h2v2h-2v-2zm-4 4h6v2h-6v-2z"/>
+      </svg>
+      مولِّد رمز الاستجابة السريعة (QR)
+    </h2>
+
+    <div class="row">
+      <input id="link" type="text" placeholder="أدخل الرابط هنا" autocomplete="on" />
+      <button id="go">إنشاء الرمز</button>
+      <div id="qrbox" aria-live="polite"></div>
+      <div id="msg" class="note"></div>
+      <footer>QRتذكرني في كل رمز</footer>
+    </div>
+  </div>
+
+  <!-- مكتبة QR أساسية -->
+  <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+  <script>
+    // محاولة تحميل بديلة إذا فشل المصدر الأول
+    (function ensureLib(){
+      if (window.QRCode) return;
+      var s = document.createElement('script');
+      s.src = 'https://unpkg.com/qrcodejs@1.0.0/qrcode.min.js';
+      document.head.appendChild(s);
+    })();
+
+    function makeQR(data){
+      var box = document.getElementById('qrbox');
+      var msg = document.getElementById('msg');
+      box.innerHTML = '';
+      msg.textContent = '';
+
+      if (window.QRCode) {
+        new QRCode(box, { text: data, width: 280, height: 280 });
+      } else {
+        // فallback إلى خدمة صورة مباشرة إذا تعذّر تحميل المكتبة
+        var img = new Image();
+        img.width = 280; img.height = 280; img.alt = 'QR';
+        img.src = 'https://api.qrserver.com/v1/create-qr-code/?size=280x280&data=' + encodeURIComponent(data);
+        box.appendChild(img);
+        msg.textContent = 'استخدمنا توليداً احتياطياً عبر خدمة خارجية.';
+      }
+    }
+
+    window.addEventListener('DOMContentLoaded', function(){
+      var btn = document.getElementById('go');
+      var input = document.getElementById('link');
+      var msg = document.getElementById('msg');
+
+      btn.addEventListener('click', function(){
+        var v = (input.value || '').trim();
+        if (!v) { msg.textContent = 'الرجاء إدخال رابط صالح.'; return; }
+        makeQR(v);
+      });
+
+      // Enter للتنفيذ السريع
+      input.addEventListener('keydown', function(e){
+        if (e.key === 'Enter') btn.click();
+      });
+    });
+  </script>
+
+  <noscript>
+    <div style="position:fixed;inset:0;background:#fff;color:#111;padding:16px;text-align:center;">
+      JavaScript مطلوب لعرض رمز QR.
+    </div>
+  </noscript>
+</body>
+</html>
